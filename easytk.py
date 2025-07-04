@@ -1,10 +1,10 @@
+from tkinter import StringVar, Tk, Widget, IntVar, Label, Entry, Button
 from typing import Any, Dict, cast, Callable, Optional
-from tkinter import StringVar, Tk, Widget, IntVar
 from queue import Queue, Empty as q_Empty
 from threading import Thread, Event
 
 class ETKWidgetManager:
-    widgets: Dict[str, Widget]
+    widgets: Dict[str, (Label | Entry | Button | Widget)]
     master: Tk
     def __init__(self, master:Tk):
         self.widgets = {}
@@ -60,8 +60,7 @@ class ETKBackgroundProcess(Thread):
           
     def wrapped_func(self, t:Callable[[], None]):
         def w(): 
-            while not self.e.is_set(): 
-                print("Hello", self.e)
+            while not self.e.is_set():
                 t()
         return w
 
