@@ -131,8 +131,6 @@ class ETKWindow:
         self.processes = ETKBackgroundProcessManager(self.master)
         self.queue = ETKQueueManager(self.master)
         
-    def schedule(self, func:Callable[[], None], delay:int=0): self.master.after(delay, func)
-        
     def run(self): 
         self.master.mainloop()
         self.processes.destroy_all()
