@@ -16,9 +16,10 @@ rm -rf easytk
 ```python
 # import package
 from easytk import ETKWindow
+from tkinter import Tk
 
 # setup window
-win = ETKWindow()
+win = ETKWindow(Tk())
 # run window
 win.run()
 ```
@@ -26,16 +27,30 @@ win.run()
 ```python
 # add widget
 from tkinter import Label # uses native tkinter widgets at the moment
-win.widgets.add("lbl-1", Label(text="Hello World")) # Dont worry about master arg, this is handled by package
+
+# if no master is provided for widget, widget will bind to first initalised 
+# ETKWindow class, so for subwindows the master must be provided
+win.widgets.add("lbl-1", Label(text="Hello World")) # no master provided
+win.widgets.add("lbl-1", Label(win.master, text="Hello World")) # master (longhand)
+# there is a shorthand for the master varible to make providing it quicker
+win.widgets.add("lbl-1", Label(win.m, text="Hello world"))
 
 # get widget
 win.widgets.get("lbl-1")
 # OR
 win.widgets["lbl-1"]
+# OR to get the last added widget
+win.widgets.last
 
 # example: placing widget
 win.widgets["lbl-1"].place(x=10, y=10)
-
+win.widgets.last.place(x=10, y=10)
+```
+#### Adding a placeholder to entry widget
+- This adds a placeholder that disapears when the user selects or types in the entry box
+```python 
+win.widgets.add("email-entry", Entry(win.m, text="email"))
+win.widgets.lbl_placeholder("email-entry", "email")
 ```
 ### Background Processes
 - Use these to stop other processing getting in the way of the drawing gui e.g data fetching, these functions will run indefinetly until destroyed.

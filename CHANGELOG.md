@@ -1,4 +1,11 @@
 # Changelog
+- v1.0.3
+    - Added multi-window feature
+    - Users can now add placeholders to widgets ``` ETKWidgetManager.lbl_placeholder() ```
+    - Fixed master assignment to widgets bug
+    - Added last property to get last created widget ``` ETKWidgetManager.last ```
+    - Added shorthand to access window master ``` ETKWindow.m ```
+    - Added examples folder
 - v1.0.2
     - Added download instructions
     - Removed unused ``` ETKWindow.schedule() ```
