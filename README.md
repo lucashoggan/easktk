@@ -4,13 +4,10 @@ A python package to make working in tkinter even easier, hope to add docs soon.
 ## Usage
 ### Download
 ```bash 
-curl https://rawcdn.githack.com/lucashoggan/easytk/d0dbd6fede91c5f121bd8cdbde16933811bbf8bd/easytk.py -o easytk.py
-# or
-wget https://rawcdn.githack.com/lucashoggan/easytk/d0dbd6fede91c5f121bd8cdbde16933811bbf8bd/easytk.py
-# or
 git clone https://github.com/lucashoggan/easytk
-mv easytk/easytk.py ./easytk.py
+mv easytk/easytk ./_easytk
 rm -rf easytk
+mv /_easytk /easytk
 ```
 ### Importing package and window setup
 ```python
