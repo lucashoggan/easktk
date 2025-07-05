@@ -1,4 +1,8 @@
 # Changelog
+- v1.0.4
+    - Seperated into seperate files to make code more organised
+    - Added "after-funcs" to make widget setup even quicker
+    - Make state even easier to use
 - v1.0.3
     - Added multi-window feature
     - Users can now add placeholders to widgets ``` ETKWidgetManager.lbl_placeholder() ```

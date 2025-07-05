@@ -50,7 +50,15 @@ win.widgets.last.place(x=10, y=10)
 - This adds a placeholder that disapears when the user selects or types in the entry box
 ```python 
 win.widgets.add("email-entry", Entry(win.m, text="email"))
-win.widgets.lbl_placeholder("email-entry", "email")
+win.widgets.ent_placeholder("email-entry", "email")
+```
+#### Using "after-funcs"
+- These are functions performed onto the widget in the add function to make setup even easier, can do things such as place an object in the same line its added such as below
+- they're setup so you can add as many functions as you like
+```python
+win.widgets.add("heading", Label(win.m, text="Hello"), lambda win: win.pack())
+# Multible actions
+win.widgets.add("btn", Button(win.m, text="Submit"), lambda w: w.pack(), lambda w: w.config(text="Submit!"))
 ```
 ### Background Processes
 - Use these to stop other processing getting in the way of the drawing gui e.g data fetching, these functions will run indefinetly until destroyed.
@@ -77,18 +85,16 @@ win.processes.destroy("api-call")
 
 ### State
 ```python
-# import tkinter StringVar and IntVar
-from tkinter import StringVar, IntVar
-
 # add state
-win.state.add("txt-in-1", StringVar())
+win.state.add("txt-in-1", "")
 
 # bind state to text input
-win.widgets.add("txt-in", Entry(textvariable=win.state["txt-in-1"].get()))
+win.widgets.add("txt-in", Entry())
+win.widgets.bind_state("txt-in", win.state["txt-in-1"])
 
 # get value of state
-win.state.val("txt-in-1")
+win.state["txt-in-1"].v
 
 # set value of state
-win.state.set("txt-in-1", "hello")
+win.state["txt-in-1"].v = "Hello"
 ```

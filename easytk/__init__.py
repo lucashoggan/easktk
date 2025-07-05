@@ -1,0 +1,1 @@
+from easytk.window import ETKWindow
