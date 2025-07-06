@@ -4,11 +4,12 @@ The `ETKWindow` class is the main window container in the EasyTK library, provid
 
 ## Overview
 
-`ETKWindow` wraps a tkinter `Tk` or `Toplevel` widget and provides four main managers:
+`ETKWindow` wraps a tkinter `Tk` or `Toplevel` widget and provides five main managers:
 - **Widget Manager**: For managing GUI widgets
 - **State Manager**: For managing application state
 - **Background Process Manager**: For managing background threads
 - **Queue Manager**: For thread-safe communication
+- **Event Manager**: For centralized event handling
 
 ## Constructor
 
@@ -30,6 +31,7 @@ window = ETKWindow(Tk())
 - `state`: ETKStateManager - Manages application state variables
 - `processes`: ETKBackgroundProcessManager - Manages background threads
 - `queue`: ETKQueueManager - Manages thread-safe task queue
+- `events`: ETKEventManager - Manages centralized event handling
 
 ### Master Access
 - `master`: Direct access to the underlying tkinter window
@@ -152,6 +154,24 @@ window.widgets.add(
 )
 
 window.run()
+```
+### Tagging widgets
+```python
+# Adding/Creating tag at widget addition
+win.widgets.add("h1", 
+    Label(win.m, text="Hello World!"), 
+    lambda w: w.pack(),
+    tags=["heading"]
+)
+# Creating tag later
+win.widgets.add_tag("text")
+# Adding tag to widget later
+win.widgets.add_widget_to_tag("text", "h1")
+
+# Select all widgets with tag
+for widget in win.widgets.get_widgets_with_tag("text"):
+    ...
+
 ```
 
 ### Using State Management
@@ -1097,42 +1117,42 @@ window.frames["status"].widgets.add(
     lambda w: w.pack(pady=15)
 )
 
-# Frame event handlers
-@window.frames.on_mouseover("drop_zone")
+# Frame event handlers using ETKEventManager
+@window.events.on_mouseover(window.frames["drop_zone"].f)
 def on_frame_hover(event):
     window.frames["drop_zone"].f.config(bg="lightyellow")
     window.frames["status"].widgets["status_label"].config(
         text="Mouse entered drop zone"
     )
 
-@window.frames.on_mouseout("drop_zone")
+@window.events.on_mouseout(window.frames["drop_zone"].f)
 def on_frame_leave(event):
     window.frames["drop_zone"].f.config(bg="lightgray")
     window.frames["status"].widgets["status_label"].config(
         text="Mouse left drop zone"
     )
 
-@window.frames.on_button_press("drop_zone", 1)
+@window.events.on_button_press(window.frames["drop_zone"].f, 1)
 def on_frame_click(event):
     window.frames["status"].widgets["status_label"].config(
         text=f"Frame clicked at ({event.x}, {event.y})"
     )
 
-@window.frames.on_button_press("drop_zone", 3)
+@window.events.on_button_press(window.frames["drop_zone"].f, 3)
 def on_frame_right_click(event):
     window.frames["drop_zone"].f.config(bg="lightcoral")
     window.frames["status"].widgets["status_label"].config(
         text="Right-clicked on frame - Frame turned red!"
     )
 
-@window.frames.on_mousewheel("drop_zone")
+@window.events.on_mousewheel(window.frames["drop_zone"].f)
 def on_frame_scroll(event):
     direction = "up" if event.delta > 0 else "down"
     window.frames["status"].widgets["status_label"].config(
         text=f"Mouse wheel scrolled {direction} over frame"
     )
 
-@window.frames.on_mouse_motion("drop_zone")
+@window.events.on_mouse_motion(window.frames["drop_zone"].f)
 def on_frame_motion(event):
     # Update coordinates in real-time (every 10th event to avoid spam)
     if hasattr(on_frame_motion, 'counter'):
@@ -1145,13 +1165,13 @@ def on_frame_motion(event):
             text=f"Mouse position in frame: ({event.x}, {event.y})"
         )
 
-@window.frames.on_configure("drop_zone")
+@window.events.on_configure(window.frames["drop_zone"].f)
 def on_frame_resize(event):
     window.frames["status"].widgets["status_label"].config(
         text=f"Frame resized to {event.width}x{event.height}"
     )
 
-@window.frames.on_keypress("drop_zone", "space")
+@window.events.on_keypress(window.frames["drop_zone"].f, "space")
 def on_frame_space_press(event):
     current_bg = window.frames["drop_zone"].f.cget("bg")
     new_bg = "lightblue" if current_bg != "lightblue" else "lightgray"
@@ -1171,35 +1191,20 @@ window.run()
 
 All the same event decorators available for widgets are also available for frames:
 
-**Mouse Events:**
-- `@window.frames.on_button_press(frame_name, button)` - Specific button press on frame (1=left, 2=middle, 3=right)
-- `@window.frames.on_button_release(frame_name, button)` - Specific button release on frame (1=left, 2=middle, 3=right)
-- `@window.frames.on_double_left_click(frame_name)` - Double left-click on frame
-- `@window.frames.on_double_right_click(frame_name)` - Double right-click on frame
-- `@window.frames.on_mouseover(frame_name)` - Mouse enters frame
-- `@window.frames.on_mouseout(frame_name)` - Mouse leaves frame
-- `@window.frames.on_mouse_motion(frame_name)` - Mouse moves over frame
-- `@window.frames.on_mousewheel(frame_name)` - Mouse wheel scroll over frame
-
-**Keyboard Events:**
-- `@window.frames.on_keypress(frame_name, key=None)` - Key press events on frame
-- `@window.frames.on_keyrelease(frame_name, key=None)` - Key release events on frame
-
-**Focus Events:**
-- `@window.frames.on_focus_in(frame_name)` - Frame gains focus
-- `@window.frames.on_focus_out(frame_name)` - Frame loses focus
-
-**Lifecycle Events:**
-- `@window.frames.on_configure(frame_name)` - Frame size/position changes
-- `@window.frames.on_destroy(frame_name)` - Frame is destroyed
+All frame events are now handled through the centralized ETKEventManager using `window.events.*` methods with the frame widget instance (e.g., `window.frames["frame_name"].f`) instead of frame names.
 
 **Note:** For keyboard events to work on frames, the frame must be focusable. Set `takefocus=True` and call `focus_set()` on the frame:
 
 ### Event Handling with Decorators
 
-EasyTK provides a comprehensive set of event decorators that make it simple to bind functions to common widget events. All decorators are methods of the `ETKWidgetManager` and follow a consistent pattern.
+EasyTK provides two approaches for event handling:
 
-#### Mouse Events
+1. **ETKEventManager (Recommended)**: Centralized event management using widget instances
+2. **ETKWidgetManager**: Legacy approach using widget names (still supported)
+
+The new ETKEventManager provides a cleaner, more direct API for event handling.
+
+#### Mouse Events with ETKEventManager (Recommended)
 
 ```python
 from tkinter import Tk, Button, Canvas
@@ -1221,63 +1226,61 @@ window.widgets.add(
     lambda w: w.pack(pady=10)
 )
 
-# Basic mouse events using general button press handler
-@window.widgets.on_button_press("test_button", 1)
+# Basic mouse events using the new ETKEventManager
+@window.events.on_button_press(window.widgets["test_button"], 1)
 def on_left_click(event):
     print("Left mouse button clicked!")
 
-@window.widgets.on_button_press("test_button", 3)
+@window.events.on_button_press(window.widgets["test_button"], 3)
 def on_right_click(event):
     print("Right mouse button clicked!")
 
-@window.widgets.on_button_press("test_button", 2)
+@window.events.on_button_press(window.widgets["test_button"], 2)
 def on_middle_click(event):
     print("Middle mouse button clicked!")
 
 # Double-click events
-@window.widgets.on_double_left_click("test_button")
+@window.events.on_double_left_click(window.widgets["test_button"])
 def on_double_left_click(event):
     print("Double left-click detected!")
 
-@window.widgets.on_double_right_click("test_button")
+@window.events.on_double_right_click(window.widgets["test_button"])
 def on_double_right_click(event):
     print("Double right-click detected!")
 
 # Specific button press/release events
-@window.widgets.on_button_press("canvas", 1)  # Left button
+@window.events.on_button_press(window.widgets["canvas"], 1)  # Left button
 def on_canvas_press(event):
     print(f"Left button pressed at ({event.x}, {event.y})")
 
-@window.widgets.on_button_release("canvas", 1)  # Left button
+@window.events.on_button_release(window.widgets["canvas"], 1)  # Left button
 def on_canvas_release(event):
     print(f"Left button released at ({event.x}, {event.y})")
 
 # Mouse wheel scrolling
-@window.widgets.on_mousewheel("canvas")
+@window.events.on_mousewheel(window.widgets["canvas"])
 def on_scroll(event):
     direction = "up" if event.delta > 0 else "down"
     print(f"Mouse wheel scrolled {direction}")
 
 # Mouse motion tracking
-@window.widgets.on_mouse_motion("canvas")
+@window.events.on_mouse_motion(window.widgets["canvas"])
 def on_mouse_move(event):
     print(f"Mouse position: ({event.x}, {event.y})")
 
 # Mouse enter/leave events
-@window.widgets.on_mouseover("test_button")
+@window.events.on_mouseover(window.widgets["test_button"])
 def on_mouse_enter(event):
     print("Mouse entered button")
     window.widgets["test_button"].config(bg="yellow")
 
-@window.widgets.on_mouseout("test_button")
+@window.events.on_mouseout(window.widgets["test_button"])
 def on_mouse_leave(event):
     print("Mouse left button")
     window.widgets["test_button"].config(bg="SystemButtonFace")
 
 window.run()
 ```
-
-#### Keyboard Events
 
 ```python
 from tkinter import Tk, Entry, Text
@@ -1300,33 +1303,33 @@ window.widgets.add(
     lambda w: w.pack(pady=10)
 )
 
-# General key press events
-@window.widgets.on_keypress("entry_field")
+# General key press events using ETKEventManager
+@window.events.on_keypress(window.widgets["entry_field"])
 def on_any_key_press(event):
     print(f"Key pressed: {event.keysym}")
 
 # Specific key press events
-@window.widgets.on_keypress("entry_field", "Return")
+@window.events.on_keypress(window.widgets["entry_field"], "Return")
 def on_enter_press(event):
     text = window.widgets["entry_field"].get()
     window.widgets["text_area"].insert("end", f"You entered: {text}\n")
     window.widgets["entry_field"].delete(0, "end")
 
-@window.widgets.on_keypress("entry_field", "Escape")
+@window.events.on_keypress(window.widgets["entry_field"], "Escape")
 def on_escape_press(event):
     window.widgets["entry_field"].delete(0, "end")
     print("Entry field cleared!")
 
-@window.widgets.on_keypress("text_area", "Control_L")
+@window.events.on_keypress(window.widgets["text_area"], "Control_L")
 def on_ctrl_press(event):
     print("Control key pressed in text area")
 
 # Key release events
-@window.widgets.on_keyrelease("entry_field")
+@window.events.on_keyrelease(window.widgets["entry_field"])
 def on_any_key_release(event):
     print(f"Key released: {event.keysym}")
 
-@window.widgets.on_keyrelease("entry_field", "space")
+@window.events.on_keyrelease(window.widgets["entry_field"], "space")
 def on_space_release(event):
     print("Space key released - word boundary detected")
 
@@ -1363,24 +1366,24 @@ window.widgets.add(
     lambda w: w.pack(pady=20)
 )
 
-# Focus in events
-@window.widgets.on_focus_in("entry1")
+# Focus in events using ETKEventManager
+@window.events.on_focus_in(window.widgets["entry1"])
 def on_entry1_focus(event):
     window.widgets["entry1"].config(bg="lightyellow")
     window.widgets["status_label"].config(text="Entry 1 has focus")
 
-@window.widgets.on_focus_in("entry2")
+@window.events.on_focus_in(window.widgets["entry2"])
 def on_entry2_focus(event):
     window.widgets["entry2"].config(bg="lightblue")
     window.widgets["status_label"].config(text="Entry 2 has focus")
 
-# Focus out events
-@window.widgets.on_focus_out("entry1")
+# Focus out events using ETKEventManager
+@window.events.on_focus_out(window.widgets["entry1"])
 def on_entry1_blur(event):
     window.widgets["entry1"].config(bg="white")
     print("Entry 1 lost focus")
 
-@window.widgets.on_focus_out("entry2")
+@window.events.on_focus_out(window.widgets["entry2"])
 def on_entry2_blur(event):
     window.widgets["entry2"].config(bg="white")
     print("Entry 2 lost focus")
@@ -1416,15 +1419,15 @@ window.widgets.add(
     lambda w: w.pack(pady=10)
 )
 
-# Configure event (size/position changes)
-@window.widgets.on_configure("resizable_frame")
+# Configure event (size/position changes) using ETKEventManager
+@window.events.on_configure(window.widgets["resizable_frame"])
 def on_frame_resize(event):
     window.widgets["info_label"].config(
         text=f"Frame size: {event.width}x{event.height}"
     )
 
-# Destroy event
-@window.widgets.on_destroy("destroy_button")
+# Destroy event using ETKEventManager
+@window.events.on_destroy(window.widgets["destroy_button"])
 def on_button_destroy(event):
     print("Button was destroyed!")
 
@@ -1437,29 +1440,31 @@ window.widgets["destroy_button"].config(command=destroy_button)
 window.run()
 ```
 
-#### Complete Event Reference
+#### Complete Event Reference (ETKEventManager)
+
+All event handling is now done through the ETKEventManager using widget instances:
 
 **Mouse Events:**
-- `@window.widgets.on_button_press(widget_name, button)` - Specific button press (1=left, 2=middle, 3=right)
-- `@window.widgets.on_button_release(widget_name, button)` - Specific button release (1=left, 2=middle, 3=right)
-- `@window.widgets.on_double_left_click(widget_name)` - Double left-click
-- `@window.widgets.on_double_right_click(widget_name)` - Double right-click
-- `@window.widgets.on_mouseover(widget_name)` - Mouse enters widget
-- `@window.widgets.on_mouseout(widget_name)` - Mouse leaves widget
-- `@window.widgets.on_mouse_motion(widget_name)` - Mouse moves over widget
-- `@window.widgets.on_mousewheel(widget_name)` - Mouse wheel scroll
+- `@window.events.on_button_press(widget, button)` - Specific button press (1=left, 2=middle, 3=right)
+- `@window.events.on_button_release(widget, button)` - Specific button release (1=left, 2=middle, 3=right)
+- `@window.events.on_double_left_click(widget)` - Double left-click
+- `@window.events.on_double_right_click(widget)` - Double right-click
+- `@window.events.on_mouseover(widget)` - Mouse enters widget
+- `@window.events.on_mouseout(widget)` - Mouse leaves widget
+- `@window.events.on_mouse_motion(widget)` - Mouse moves over widget
+- `@window.events.on_mousewheel(widget)` - Mouse wheel scroll
 
 **Keyboard Events:**
-- `@window.widgets.on_keypress(widget_name, key=None)` - Key press (all keys if key=None)
-- `@window.widgets.on_keyrelease(widget_name, key=None)` - Key release (all keys if key=None)
+- `@window.events.on_keypress(widget, key=None)` - Key press (all keys if key=None)
+- `@window.events.on_keyrelease(widget, key=None)` - Key release (all keys if key=None)
 
 **Focus Events:**
-- `@window.widgets.on_focus_in(widget_name)` - Widget gains focus
-- `@window.widgets.on_focus_out(widget_name)` - Widget loses focus
+- `@window.events.on_focus_in(widget)` - Widget gains focus
+- `@window.events.on_focus_out(widget)` - Widget loses focus
 
 **Lifecycle Events:**
-- `@window.widgets.on_configure(widget_name)` - Widget size/position changes
-- `@window.widgets.on_destroy(widget_name)` - Widget is destroyed
+- `@window.events.on_configure(widget)` - Widget size/position changes
+- `@window.events.on_destroy(widget)` - Widget is destroyed
 
 **Common Key Names for Keyboard Events:**
 - `"Return"` - Enter key

@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
 Test file for the new ETKEventManager.
-This demonstrates the centralized event management system using widget instances.
+This demonstrates how to use the centralized event manager with widget instances.
 """
 
-from tkinter import Tk, Label, Button, Entry, Text, Canvas, Listbox
+from tkinter import Tk, Label, Button, Entry, Text, Canvas
 from easytk.window import ETKWindow
 import time
 
 def main():
     window = ETKWindow(Tk())
-    window.title("ETKEventManager Test - Widget Instance Based Events").geometry("800x600")
+    window.title("ETKEventManager Test").geometry("800x600")
     
     # Create a text widget to show event messages
     window.widgets.add(
@@ -51,15 +51,9 @@ def main():
         lambda w: w.pack(pady=5, fill="x", padx=10)
     )
     
-    window.widgets.add(
-        "test_listbox",
-        Listbox(window.m, height=4),
-        lambda w: w.pack(pady=5, fill="x", padx=10),
-        lambda w: [w.insert("end", f"Item {i}") for i in range(1, 6)]
-    )
+    # === NEW EVENT MANAGER USAGE ===
     
-    # === NEW ETKEVENTMANAGER USAGE ===
-    
+    # Mouse events using the new event manager with widget instances
     @window.events.on_mouseover(window.widgets["test_label"])
     def on_label_hover(event):
         log_event("🖱️ Mouse entered label (via ETKEventManager)")
@@ -90,6 +84,7 @@ def main():
     def on_double_right_click(event):
         log_event("👆👆 Double right click on button (via ETKEventManager)")
     
+    # Keyboard events
     @window.events.on_keypress(window.widgets["test_entry"])
     def on_any_keypress(event):
         log_event(f"⌨️ Key pressed: {event.keysym} (via ETKEventManager)")
@@ -111,9 +106,9 @@ def main():
     def on_space_release(event):
         log_event("⌨️⬆️ Space key released! (via ETKEventManager)")
     
+    # Mouse wheel and advanced events
     @window.events.on_mousewheel(window.widgets["test_canvas"])
     def on_mouse_wheel(event):
-        # event.delta gives scroll direction (positive = up, negative = down)
         direction = "up" if event.delta > 0 else "down"
         log_event(f"🎡 Mouse wheel scrolled {direction} on canvas (via ETKEventManager)")
     
@@ -121,14 +116,11 @@ def main():
     def on_canvas_left_press(event):
         log_event(f"🎨 Left button pressed on canvas at ({event.x}, {event.y}) (via ETKEventManager)")
     
-    @window.events.on_button_press(window.widgets["test_canvas"], 3)
-    def on_canvas_right_press(event):
-        log_event(f"🎨 Right button pressed on canvas at ({event.x}, {event.y}) (via ETKEventManager)")
-    
     @window.events.on_button_release(window.widgets["test_canvas"], 1)
     def on_canvas_left_release(event):
         log_event(f"🎨 Left button released on canvas at ({event.x}, {event.y}) (via ETKEventManager)")
     
+    # Focus events
     @window.events.on_focus_in(window.widgets["test_entry"])
     def on_entry_focus_in(event):
         log_event("🎯 Entry widget gained focus (via ETKEventManager)")
@@ -139,6 +131,7 @@ def main():
         log_event("🎯 Entry widget lost focus (via ETKEventManager)")
         window.widgets["test_entry"].config(bg="white")
     
+    # Motion and configure events
     @window.events.on_mouse_motion(window.widgets["test_canvas"])
     def on_canvas_mouse_motion(event):
         # Only log every 20th motion event to avoid spam
@@ -154,21 +147,17 @@ def main():
     def on_canvas_configure(event):
         log_event(f"📐 Canvas resized to {event.width}x{event.height} (via ETKEventManager)")
     
-    @window.events.on_destroy(window.widgets["test_button"])
-    def on_button_destroy(event):
-        log_event("💥 Button widget was destroyed! (via ETKEventManager)")
-    
-    # Add some instructions
+    # Add instructions
     window.widgets.add(
         "instructions",
         Label(
             window.m, 
-            text="ETKEventManager Demo - Widget Instance Based Events:\n" +
-                 "• All events use window.events.on_*() with widget instances\n" +
-                 "• Centralized event management through ETKEventManager\n" +
-                 "• Direct widget instance binding (no string lookups)\n" +
-                 "• Better type safety and performance\n\n" +
-                 "Try different interactions with the widgets above!",
+            text="NEW ETKEventManager Demo:\\n" +
+                 "• All events now use window.events.on_*() with widget instances\\n" +
+                 "• More direct and flexible than widget name strings\\n" +
+                 "• Centralized event management\\n" +
+                 "• Same functionality as before but cleaner API\\n\\n" +
+                 "Try interacting with the widgets above!",
             justify="left",
             bg="lightgreen",
             pady=10

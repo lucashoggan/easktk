@@ -1,4 +1,7 @@
 # Changelog
+- v1.0.7
+    - **Added ETKEventManager**: New centralized event management system in `easytk/events.py`
+    - Added basic tagging system in ```ETKWidgetManager```
 - v1.0.6
     - Added ```ETKState.on_change``` and ```ETKStateManager.on_change()``` decorators to run code on state change
     - Added ETKFrameManager to manage tkinter Frames

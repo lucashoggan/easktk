@@ -1,6 +1,7 @@
 from easytk.processes import ETKQueueManager, ETKBackgroundProcessManager
 from easytk.widgets import ETKWidgetManager, ETKFrameManager
 from easytk.state import ETKStateManager
+from easytk.events import ETKEventManager
 from tkinter import Tk, Toplevel
 
 
@@ -10,6 +11,7 @@ class ETKWindow:
     processes: ETKBackgroundProcessManager
     queue: ETKQueueManager
     frames: ETKFrameManager
+    events: ETKEventManager
     master: Tk | Toplevel
     def __init__(self, master: Tk|Toplevel):
         self.master = master
@@ -18,6 +20,7 @@ class ETKWindow:
         self.processes = ETKBackgroundProcessManager()
         self.queue = ETKQueueManager(self.master)
         self.frames = ETKFrameManager()
+        self.events = ETKEventManager()
     
     
     def sub(self): return ETKWindow(Toplevel(self.master))
