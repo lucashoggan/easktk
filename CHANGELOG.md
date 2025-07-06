@@ -1,4 +1,13 @@
 # Changelog
+- v1.0.6
+    - Added ```ETKState.on_change``` and ```ETKStateManager.on_change()``` decorators to run code on state change
+    - Added ETKFrameManager to manage tkinter Frames
+    - Added event handlers to ```ETKWidgetManager```
+    - Added event handlers to ```ETKFrameManager```
+- v1.0.5
+    - Updated README.md
+    - Added ``` ETKWindow.title()``` and ```ETKWindow.geometry()```
+    - Added helpfull docstrings.
 - v1.0.4
     - Seperated into seperate files to make code more organised
     - Added "after-funcs" to make widget setup even quicker
